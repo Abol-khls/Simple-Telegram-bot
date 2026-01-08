@@ -26,7 +26,7 @@ This project is a simple Telegram bot written in Python. It demonstrates how to 
    ```
 3. **Install dependencies**:
    ```bash
-   pip install -r 1/requirements.txt
+   pip install -r requirements.txt
    ```
 4. **Set your Telegram bot token** in the code (replace the placeholder in `main()` with your own token).
 5. **Run the bot**:
