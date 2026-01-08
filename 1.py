@@ -27,14 +27,39 @@ async def wam(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
     )
 
-async def btc_price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    response = requests.get('https://coinmarketcap.com/currencies/bitcoin/')
+async def price(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not context.args:
+        await update.message.reply_text(
+            "❗ Please enter a coin name.\n\n"
+            "Correct format:\n"
+            "/price <coin-name>\n\n"
+            "Examples:\n"
+            "/price bitcoin\n"
+            "/price solana"
+        )
+        return
+
+
+    coin = context.args[0].lower()
+    url = f"https://coinmarketcap.com/currencies/{coin}/"
+
+    response = requests.get(url)
+
+    if response.status_code == 404:
+        await update.message.reply_text("page not found!")
+        return
+
     soup = BeautifulSoup(response.content, "lxml")
     dom = etree.HTML(str(soup))
-    price = dom.xpath('/html/body/div[1]/div[2]/div/div[2]/div/div/div[1]/div/section/div/div[2]/span[1]/text()')[0]
+
+    try:
+        price = dom.xpath('/html/body/div[1]/div[2]/div/div[2]/div/div/div[1]/div/section/div/div[2]/span[1]/text()')[0]
+    except:
+        await update.message.reply_text("cant find price!")
+        return
+
     await update.message.reply_html(
-        rf"Bitcoin price {price}!",
-        
+        f"<b>price{coin.capitalize()}</b>: {price}"
     )
 
 
@@ -44,12 +69,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(update.message.text)
 
+    
 def main() -> None:
     application = Application.builder().token("8331706805:AAHhD1Cm9DwjKJN8dQ6iw34sLIbEwPKutQQ").build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("who_am_i", wam))
-    application.add_handler(CommandHandler("btc", btc_price))
+
+    application.add_handler(CommandHandler("price", price))
     application.add_handler(CommandHandler("help", help_command))
 
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
